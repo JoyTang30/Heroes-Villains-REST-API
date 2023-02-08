@@ -9,8 +9,29 @@ from .models import Super
 def supers_list(request):
     if request.method == 'GET':
         supers= Super.objects.all()
-        serializer= SuperSerializer(supers, many=True)
-        return Response(serializer.data)
+        supers_type_param= request.query_params.get('type')
+
+        if supers_type_param:
+            supers= supers.filter(super_type__type= supers_type_param)
+
+            serializer= SuperSerializer(supers, many=True)
+            return Response(serializer.data)
+        else:
+            custom_response_dictionary = {}
+
+            #for super_type in supers:
+            hero_info = Super.objects.filter(super_type_id=1)
+            villian_info = Super.objects.filter(super_type_id=2)
+
+
+            hero_serializer = SuperSerializer(hero_info, many=True)
+            villian_serializer = SuperSerializer(villian_info, many=True)
+            custom_response_dictionary = {
+                "heroes":hero_serializer.data,
+                "villians":villian_serializer.data
+            }
+
+            return Response(custom_response_dictionary)
     elif request.method == 'POST':
         serializer = SuperSerializer(data= request.data)
         serializer.is_valid(raise_exception=True)
@@ -32,3 +53,18 @@ def supers_detail(request, pk):
     elif request.method == 'DELETE':
         supers.delete()
         return Response(status= status.HTTP_204_NO_CONTENT)
+
+
+#    @api_view(['GET'])
+#    def supers_type(request):
+#        supers_type_param= request.query_params.get('type')
+#
+#        all_type= Super.objects.all()
+#        print(supers_type_param)
+#
+#        if supers_type_param:
+#            all_type= all_type.filter(super__type= supers_type_param)
+#
+#        serializer= SuperSerializer(supers, many=True)
+#        
+#        return Response(serializer.data)
